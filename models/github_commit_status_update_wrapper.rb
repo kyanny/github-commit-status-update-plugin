@@ -1,5 +1,7 @@
-# Jenkins plugin to call GitHub Commit Status API
+require_relative '../lib/github_commit_status_update_client'
+require 'stringio'
 
+# Jenkins plugin to call GitHub Commit Status API
 class GithubCommitStatusUpdateWrapper < Jenkins::Tasks::BuildWrapper
   display_name 'Commit_status_update build wrapper'
 
@@ -16,7 +18,21 @@ class GithubCommitStatusUpdateWrapper < Jenkins::Tasks::BuildWrapper
   # @param [Jenkins::Launcher] launcher a launcher for the orderly starting/stopping of processes.
   # @param [Jenkins::Model::Listener] listener channel for interacting with build output console
   def setup(build, launcher, listener)
+    # TODO: get git commit sha1 from $GIT_COMMIT environment variable somehow
+    sha1 = begin
+             workspace = build.send(:native).workspace.to_s
+             io_capture = StringIO.new
 
+             cmd = []
+             cmd << "cd #{workspace}"
+             cmd << 'git rev-parse head'
+
+             launcher.execute('bash', '-c', cmd.join(' && '), { out: io_capture })
+             io_capture.string.chomp
+           end
+    listener.info("SHA1: #{sha1}")
+    @client = GithubCommitStatusUpdateClient.new('', 'kyanny', 'test', sha1)
+    @client.pending({})
   end
 
   # Optionally perform optional teardown for a build
