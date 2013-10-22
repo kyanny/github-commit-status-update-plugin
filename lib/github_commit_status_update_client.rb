@@ -2,6 +2,7 @@ require 'net/https'
 require 'uri'
 require 'json'
 require 'pathname'
+require 'jruby/openssl/gem_only'
 
 # Client for GitHub Commit Status API
 class GithubCommitStatusUpdateClient
